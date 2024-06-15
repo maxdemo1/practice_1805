@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import generator from "generate-password";
+import "dotenv/config";
 
 import { User } from "../models/user.js";
 import { createError } from "../helpers/createError.js";
@@ -63,14 +64,14 @@ export const refreshPassword = async (req, res, next) => {
         await User.findByIdAndUpdate(user._id, { password: hashPass });
 
         await transport.sendMail({
-            from: "example@ex.com", // sender address
+            from: process.env.UKR_NET_MAIL_LOGIN, // sender address
             to: user.email, // list of receivers
             subject: "Refresh Password", // Subject line
             // text: `Password: ${newPassword}`, // plain text body
             html: `<b>Password: ${newPassword}</b>`, // html body
         });
 
-        res.send({ password: newPassword });
+        res.send({ message: "Password updated" });
     } catch (error) {
         next(error);
     }
