@@ -33,3 +33,33 @@ export async function authenticate(req, res, next) {
     next(error);
   }
 }
+
+export async function authenticatePassword(req, res, next) {
+  try {
+    const authToken = req.headers.authorization;
+
+    if (!authToken) {
+      throw createError(401, "Authentication failed");
+    }
+
+    const [bearer, token] = authToken.split(" ", 2);
+
+    if (bearer !== "Bearer" || !token) {
+      throw createError(401, "Authentication failed");
+    }
+
+    const { id } = jwt.verify(token, process.env.SECRET_KEY);
+
+    const user = await User.findById(id);
+
+    if (user === null || user.passwordRestoringToken !== token) {
+      throw createError(401, "token exprised");
+    }
+    await User.findByIdAndUpdate(user._id, { passwordRestoringToken: null });
+    req.user = user;
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
